@@ -1,0 +1,46 @@
+version: "3.7"
+
+services:
+  app:
+    build: .
+    container_name: app
+    command: python manage.py runserver 0.0.0.0:8000
+    volumes:
+      - .:/usr/src/app/
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env.db
+    depends_on:
+      - db
+      - redis
+
+  celery:
+    build: .
+    restart: always
+    command: celery -A django_redis_celery worker -l INFO
+    volumes:
+      - .:/usr/src/app/
+    depends_on:
+      - app
+      - redis
+      - db
+    env_file:
+      - .env.db
+      
+
+  db:
+    image: postgres:12.0-alpine
+    container_name: db
+    env_file:
+      - .env.db
+    volumes:
+      - pgdata:/var/lib/postgresql/data/
+
+  redis:
+    image: "redis:alpine"
+
+volumes:
+  pgdata:
+      
+    
